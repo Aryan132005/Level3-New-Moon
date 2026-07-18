@@ -1,5 +1,9 @@
 # Private Voting dApp on Midnight Blockchain
 
+The video demonstration below shows the full functionality in action: proposal creation, random voter key generation, anonymous voting transitions, proof generation loading states, and administrative closure.
+
+
+![Private Voting Walkthrough Demo Video](./screenshots/demo_video.gif)
 [![Continuous Integration](https://github.com/Aryan132005/Level3-New-Moon/actions/workflows/ci.yml/badge.svg)](https://github.com/Aryan132005/Level3-New-Moon/actions/workflows/ci.yml)
 
 A production-grade, privacy-preserving decentralized application (dApp) built on the Midnight blockchain. This dApp allows eligible voters to cast anonymous YES/NO ballots on proposals, where votes are verifiably tabulated but cannot be linked to the voters' on-chain identities.
@@ -120,7 +124,10 @@ Our test suite uses in-memory simulation to run full contract circuit transition
 ### Automated Test Output Verification
 Below is a screenshot of the 3 passing unit tests executing successfully in the Vitest environment:
 
-![Vitest Passing Test Output Screenshot](./screenshots/test_output_screenshot.png)
+![Vitest Passing Test Output Screenshot]![alt text](image.png)
+
+
+### CI Pipelines
 
 ---
 
@@ -143,12 +150,7 @@ To run the frontend locally:
 ### Application UI Dashboard
 Here is the custom dark glassmorphic user interface showing live proposals and ZK tally statistics:
 
-![Application UI Dashboard Screenshot](./screenshots/dashboard_screenshot.png)
-
-### 1-Minute Walkthrough Video
-The video demonstration below shows the full functionality in action: proposal creation, random voter key generation, anonymous voting transitions, proof generation loading states, and administrative closure.
-
-![Private Voting Walkthrough Demo Video](./screenshots/demo_video.gif)
+![Application UI Dashboard Screenshot]![alt text](image-1.png)
 
 ---
 
