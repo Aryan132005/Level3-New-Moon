@@ -117,6 +117,11 @@ Our test suite uses in-memory simulation to run full contract circuit transition
     ```
     *This runs three comprehensive tests verifying happy-path voting, double-voting rejection, and voting-closed rejection.*
 
+### Automated Test Output Verification
+Below is a screenshot of the 3 passing unit tests executing successfully in the Vitest environment:
+
+![Vitest Passing Test Output Screenshot](./screenshots/test_output_screenshot.png)
+
 ---
 
 ## Running the Application
@@ -130,6 +135,20 @@ To run the frontend locally:
 2.  Open your browser and navigate to `http://localhost:5173`.
 3.  **Sandbox Mode:** If the Lace wallet is not connected, the dApp automatically boots into Sandbox ZK Simulator mode, allowing you to deploy proposals, generate voter secrets, cast anonymous votes, and close voting with full local cryptographic verification.
 4.  **Lace Wallet Mode:** Connect your Lace browser extension to deploy and transact on the live Midnight testnet.
+
+---
+
+## Visual Demonstration
+
+### Application UI Dashboard
+Here is the custom dark glassmorphic user interface showing live proposals and ZK tally statistics:
+
+![Application UI Dashboard Screenshot](./screenshots/dashboard_screenshot.png)
+
+### 1-Minute Walkthrough Video
+The video demonstration below shows the full functionality in action: proposal creation, random voter key generation, anonymous voting transitions, proof generation loading states, and administrative closure.
+
+![Private Voting Walkthrough Demo Video](./screenshots/demo_video.gif)
 
 ---
 
