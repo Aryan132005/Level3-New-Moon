@@ -141,6 +141,24 @@ A GitHub Actions workflow is located at `.github/workflows/ci.yml`. On every pus
 
 ---
 
+## Troubleshooting & FAQs
+
+### WSL Paths and Compilation Mismatch
+If you get `Exception: voting.compact line 1: language version 0.23.0 mismatch` when running `compact compile`, make sure your contract has:
+```typescript
+pragma language_version 0.23;
+```
+which matches the syntax expected by the `compact` compiler (v0.31.x / v0.23.0 engine).
+
+### Web Crypto digest error in Browser
+If you get type errors regarding `ArrayBuffer` in Web Crypto APIs:
+```typescript
+const hashBuffer = await window.crypto.subtle.digest('SHA-256', data as any);
+```
+Ensure you have cast the `Uint8Array` to `any` or used `data.buffer` to pass the correct `ArrayBufferView` format.
+
+---
+
 ## License
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
