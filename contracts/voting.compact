@@ -1,4 +1,4 @@
-pragma language_version >= 0.30.0;
+pragma language_version 0.23;
 
 import CompactStandardLibrary;
 
@@ -18,26 +18,26 @@ witness adminSecretKey(): Bytes<32>;
 
 // Constructor to initialize state
 constructor(pId: Bytes<32>, pText: Opaque<"string">, adminCommit: Bytes<32>) {
-    proposalId = pId;
-    proposalText = pText;
+    proposalId = disclose(pId);
+    proposalText = disclose(pText);
     votingOpen = true;
-    adminCommitment = adminCommit;
+    adminCommitment = disclose(adminCommit);
 }
 
 // Circuit to cast a vote
 export circuit castVote(): [] {
     // Assert voting is currently open
-    assert votingOpen "Voting is closed";
+    assert(votingOpen, "Voting is closed");
 
     // Retrieve private inputs via witness functions
     const sk = voterSecretKey();
-    const choice = voteChoice();
+    const choice = disclose(voteChoice());
 
     // Derive nullifier inside the ZK proof: nullifier = persistentHash(secret key + proposal ID)
-    const nullifier = persistentHash<Vector<2, Bytes<32>>>([sk, proposalId]);
+    const nullifier = disclose(persistentHash<Vector<2, Bytes<32>>>([sk, proposalId]));
 
     // Prevent double voting by checking if nullifier is already present on the ledger
-    assert !nullifierSet.member(nullifier) "Double voting is not allowed";
+    assert(!nullifierSet.member(nullifier), "Double voting is not allowed");
 
     // Mark nullifier as spent on-chain
     nullifierSet.insert(nullifier, true);
@@ -54,6 +54,6 @@ export circuit castVote(): [] {
 export circuit closeVoting(): [] {
     const adminSk = adminSecretKey();
     // Validate admin credentials by verifying their secret key matches the commitment
-    assert persistentHash<Bytes<32>>(adminSk) == adminCommitment "Unauthorized admin";
+    assert(disclose(persistentHash<Bytes<32>>(adminSk) == adminCommitment), "Unauthorized admin");
     votingOpen = false;
 }
