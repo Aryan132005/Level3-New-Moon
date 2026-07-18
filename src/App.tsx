@@ -95,6 +95,14 @@ export function App() {
     }
   };
 
+  // Reset Sandbox state
+  const handleResetSandbox = () => {
+    if (window.confirm("Are you sure you want to clear all sandbox proposals and reset the state?")) {
+      localStorage.removeItem('midnight_voting_proposals');
+      window.location.reload();
+    }
+  };
+
   // Deploy Proposal
   const handleDeploy = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -228,6 +236,11 @@ export function App() {
             <span className="badge badge-lace">● Connected to Lace ({walletAddress?.slice(0, 8)}...)</span>
           )}
           
+          {mode === 'simulator' && (
+            <button className="btn btn-secondary btn-action" onClick={handleResetSandbox}>
+              Reset Sandbox
+            </button>
+          )}
           {mode === 'simulator' && isLaceAvailable() && (
             <button className="btn btn-secondary btn-action" onClick={handleConnectWallet}>
               Connect Lace Wallet
