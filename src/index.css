@@ -180,6 +180,12 @@ h1, h2, h3, h4 {
   justify-content: center;
   gap: 0.5rem;
   transition: var(--transition);
+  outline: none;
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--secondary);
+  outline-offset: 2px;
 }
 
 .btn-primary {
