@@ -21,13 +21,13 @@ describe('Private Voting Smart Contract Tests', () => {
   it('Happy Path: cast a valid vote, tally increments by 1', () => {
     // Mock witnesses
     const mockWitnesses = {
-      voterSecretKey: (context: any) => [context.currentPrivateState, new Uint8Array(32)],
-      voteChoice: (context: any) => [context.currentPrivateState, true], // Yes vote
-      adminSecretKey: (context: any) => [context.currentPrivateState, adminSk]
+      voterSecretKey: (context: any) => [context.currentPrivateState, new Uint8Array(32)] as [any, Uint8Array],
+      voteChoice: (context: any) => [context.currentPrivateState, true] as [any, boolean], // Yes vote
+      adminSecretKey: (context: any) => [context.currentPrivateState, adminSk] as [any, Uint8Array]
     };
 
     const contract = new Contract(mockWitnesses);
-    const constructorContext = createConstructorContext({}, dummyCoinPublicKey);
+    const constructorContext = createConstructorContext({}, dummyCoinPublicKey as any);
 
     // Initialize state
     const initResult = contract.initialState(constructorContext, proposalId, proposalText, adminCommit);
@@ -41,7 +41,7 @@ describe('Private Voting Smart Contract Tests', () => {
     // Cast vote
     const circuitContext = createCircuitContext(
       dummyContractAddress(),
-      dummyCoinPublicKey,
+      dummyCoinPublicKey as any,
       initResult.currentContractState,
       {}
     );
@@ -59,13 +59,13 @@ describe('Private Voting Smart Contract Tests', () => {
     voterSk[0] = 77; // Voter secret key
 
     const mockWitnesses = {
-      voterSecretKey: (context: any) => [context.currentPrivateState, voterSk],
-      voteChoice: (context: any) => [context.currentPrivateState, false], // No vote
-      adminSecretKey: (context: any) => [context.currentPrivateState, adminSk]
+      voterSecretKey: (context: any) => [context.currentPrivateState, voterSk] as [any, Uint8Array],
+      voteChoice: (context: any) => [context.currentPrivateState, false] as [any, boolean], // No vote
+      adminSecretKey: (context: any) => [context.currentPrivateState, adminSk] as [any, Uint8Array]
     };
 
     const contract = new Contract(mockWitnesses);
-    const constructorContext = createConstructorContext({}, dummyCoinPublicKey);
+    const constructorContext = createConstructorContext({}, dummyCoinPublicKey as any);
 
     // Initialize state
     const initResult = contract.initialState(constructorContext, proposalId, proposalText, adminCommit);
@@ -73,7 +73,7 @@ describe('Private Voting Smart Contract Tests', () => {
     // Cast first vote
     const circuitContext1 = createCircuitContext(
       dummyContractAddress(),
-      dummyCoinPublicKey,
+      dummyCoinPublicKey as any,
       initResult.currentContractState,
       {}
     );
@@ -90,13 +90,13 @@ describe('Private Voting Smart Contract Tests', () => {
 
   it('Voting-closed rejection: vote cast after close is rejected', () => {
     const mockWitnesses = {
-      voterSecretKey: (context: any) => [context.currentPrivateState, new Uint8Array(32)],
-      voteChoice: (context: any) => [context.currentPrivateState, true],
-      adminSecretKey: (context: any) => [context.currentPrivateState, adminSk]
+      voterSecretKey: (context: any) => [context.currentPrivateState, new Uint8Array(32)] as [any, Uint8Array],
+      voteChoice: (context: any) => [context.currentPrivateState, true] as [any, boolean],
+      adminSecretKey: (context: any) => [context.currentPrivateState, adminSk] as [any, Uint8Array]
     };
 
     const contract = new Contract(mockWitnesses);
-    const constructorContext = createConstructorContext({}, dummyCoinPublicKey);
+    const constructorContext = createConstructorContext({}, dummyCoinPublicKey as any);
 
     // Initialize state
     const initResult = contract.initialState(constructorContext, proposalId, proposalText, adminCommit);
@@ -104,7 +104,7 @@ describe('Private Voting Smart Contract Tests', () => {
     // Close voting
     const closeContext = createCircuitContext(
       dummyContractAddress(),
-      dummyCoinPublicKey,
+      dummyCoinPublicKey as any,
       initResult.currentContractState,
       {}
     );
