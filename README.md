@@ -89,7 +89,7 @@ Since the Compact compiler distributes Linux-native binaries, compilation must r
 
 1.  Open WSL (Ubuntu) and install the compiler:
     ```bash
-    curl -sSfL https://midnight.network/download/compact/install.sh | sh
+    curl -sSfL https://github.com/midnightntwrk/compact/releases/download/compact-v0.5.1/compact-installer.sh | sh
     ```
 2.  Add the compiler to path:
     ```bash
