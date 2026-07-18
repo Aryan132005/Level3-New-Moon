@@ -1,5 +1,7 @@
 # Private Voting dApp on Midnight Blockchain
 
+[![Continuous Integration](https://github.com/Aryan132005/Level3-New-Moon/actions/workflows/ci.yml/badge.svg)](https://github.com/Aryan132005/Level3-New-Moon/actions/workflows/ci.yml)
+
 A production-grade, privacy-preserving decentralized application (dApp) built on the Midnight blockchain. This dApp allows eligible voters to cast anonymous YES/NO ballots on proposals, where votes are verifiably tabulated but cannot be linked to the voters' on-chain identities.
 
 ## Table of Contents
