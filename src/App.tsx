@@ -327,7 +327,7 @@ export function App() {
                     <label className="form-label">Voter Cryptographic Secret Key (Hex)</label>
                     <div style={{ display: 'flex', gap: '0.5rem' }}>
                       <input
-                        type="password"
+                        type="text"
                         className="form-input"
                         placeholder="e.g. 32-byte hex string (64 characters)"
                         value={voterSecret}
@@ -380,7 +380,7 @@ export function App() {
                     <div className="form-group">
                       <label className="form-label">Admin Secret Key (Hex)</label>
                       <input
-                        type="password"
+                        type="text"
                         className="form-input"
                         placeholder="Must match the admin commitment designated during proposal deployment"
                         value={adminSecret}
