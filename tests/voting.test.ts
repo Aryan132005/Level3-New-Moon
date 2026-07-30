@@ -5,7 +5,7 @@ import {
   createCircuitContext,
   dummyContractAddress,
 } from '@midnight-ntwrk/compact-runtime';
-import { Contract, ledger } from '../../contracts/managed/voting/contract/index.js';
+import { Contract, ledger } from '../contracts/managed/voting/contract/index.js';
 
 // Setup common parameters
 const dummyCoinPublicKey = new Uint8Array(32);
@@ -19,17 +19,15 @@ const adminCommit = crypto.createHash('sha256').update(adminSk).digest();
 
 describe('Private Voting Smart Contract Tests', () => {
   it('Circuit Logic: cast a valid vote, tally increments by 1', () => {
-    // Mock witnesses
     const mockWitnesses = {
       voterSecretKey: (context: any) => [context.currentPrivateState, new Uint8Array(32)] as [any, Uint8Array],
-      voteChoice: (context: any) => [context.currentPrivateState, true] as [any, boolean], // Yes vote
+      voteChoice: (context: any) => [context.currentPrivateState, true] as [any, boolean],
       adminSecretKey: (context: any) => [context.currentPrivateState, adminSk] as [any, Uint8Array]
     };
 
     const contract = new Contract(mockWitnesses);
     const constructorContext = createConstructorContext({}, dummyCoinPublicKey as any);
 
-    // Initialize state
     const initResult = contract.initialState(constructorContext, proposalId, proposalText, adminCommit);
     const initialLedger = ledger(initResult.currentContractState.data);
 
@@ -38,7 +36,6 @@ describe('Private Voting Smart Contract Tests', () => {
     expect(initialLedger.noTally).toBe(0n);
     expect(initialLedger.votingOpen).toBe(true);
 
-    // Cast vote
     const circuitContext = createCircuitContext(
       dummyContractAddress(),
       dummyCoinPublicKey as any,
@@ -56,21 +53,19 @@ describe('Private Voting Smart Contract Tests', () => {
 
   it('Privacy Behavior: double-vote rejection using nullifier tracking', () => {
     const voterSk = new Uint8Array(32);
-    voterSk[0] = 77; // Voter secret key
+    voterSk[0] = 77;
 
     const mockWitnesses = {
       voterSecretKey: (context: any) => [context.currentPrivateState, voterSk] as [any, Uint8Array],
-      voteChoice: (context: any) => [context.currentPrivateState, false] as [any, boolean], // No vote
+      voteChoice: (context: any) => [context.currentPrivateState, false] as [any, boolean],
       adminSecretKey: (context: any) => [context.currentPrivateState, adminSk] as [any, Uint8Array]
     };
 
     const contract = new Contract(mockWitnesses);
     const constructorContext = createConstructorContext({}, dummyCoinPublicKey as any);
 
-    // Initialize state
     const initResult = contract.initialState(constructorContext, proposalId, proposalText, adminCommit);
 
-    // Cast first vote
     const circuitContext1 = createCircuitContext(
       dummyContractAddress(),
       dummyCoinPublicKey as any,
@@ -82,7 +77,6 @@ describe('Private Voting Smart Contract Tests', () => {
 
     expect(ledgerAfterVote1.noTally).toBe(1n);
 
-    // Cast second vote with the same secret key (same nullifier) -> must throw assertion error
     expect(() => {
       contract.circuits.castVote(result1.context);
     }).toThrowError('failed assert: Double voting is not allowed');
@@ -98,10 +92,8 @@ describe('Private Voting Smart Contract Tests', () => {
     const contract = new Contract(mockWitnesses);
     const constructorContext = createConstructorContext({}, dummyCoinPublicKey as any);
 
-    // Initialize state
     const initResult = contract.initialState(constructorContext, proposalId, proposalText, adminCommit);
 
-    // Close voting (admin transition)
     const closeContext = createCircuitContext(
       dummyContractAddress(),
       dummyCoinPublicKey as any,
@@ -113,7 +105,6 @@ describe('Private Voting Smart Contract Tests', () => {
 
     expect(closedLedger.votingOpen).toBe(false);
 
-    // Attempt to cast vote after closure -> must throw assertion error
     expect(() => {
       contract.circuits.castVote(closeResult.context);
     }).toThrowError('failed assert: Voting is closed');

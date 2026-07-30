@@ -5,7 +5,7 @@ import {
   createCircuitContext,
   dummyContractAddress,
 } from '@midnight-ntwrk/compact-runtime';
-import { Contract, ledger } from '../../contracts/managed/voting/contract/index.js';
+import { Contract, ledger } from '../contracts/managed/voting/contract/index.js';
 
 // Setup common parameters
 const dummyCoinPublicKey = new Uint8Array(32);

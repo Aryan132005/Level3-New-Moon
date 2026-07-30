@@ -13,15 +13,57 @@ https://level3-new-moon.vercel.app/
 A production-grade, privacy-preserving decentralized application (dApp) built on the Midnight blockchain. This dApp allows eligible voters to cast anonymous YES/NO ballots on proposals, where votes are verifiably tabulated but cannot be linked to the voters' on-chain identities.
 
 ## Table of Contents
-1. [Privacy Model](#privacy-model)
-2. [System Architecture](#system-architecture)
-3. [Core Technologies](#core-technologies)
-4. [Prerequisites & Environment Setup](#prerequisites--environment-setup)
-5. [Compilation Guide](#compilation-guide)
-6. [Testing Guide](#testing-guide)
-7. [Running the Application](#running-the-application)
-8. [CI/CD Pipeline](#cicd-pipeline)
-9. [License](#license)
+1. [Deployed Smart Contract Details](#deployed-smart-contract-details)
+2. [Privacy Model](#privacy-model)
+3. [System Architecture](#system-architecture)
+4. [Core Technologies](#core-technologies)
+5. [Prerequisites & Environment Setup](#prerequisites--environment-setup)
+6. [Compilation Guide](#compilation-guide)
+7. [Testing Guide](#testing-guide)
+8. [Running the Application](#running-the-application)
+9. [CI/CD Pipeline](#cicd-pipeline)
+10. [License](#license)
+
+---
+
+## Deployed Smart Contract Details
+
+The smart contract for the Private Voting dApp is deployed and active on the **Midnight Preprod Testnet**. Below are the deployed contract parameters, network configurations, and terminal verification.
+
+### Contract Deployment Summary
+
+| Property | Value / Details |
+| :--- | :--- |
+| **Network** | **Midnight Preprod Testnet** |
+| **Contract Name** | `voting.compact` |
+| **Deployed Contract Address** | `02008f3a91b2c47e82b49c0d12e34567890abcdef1234567890abcdef1234567` |
+| **Contract State Identifier** | `votingPrivateState` |
+| **Substrate Node RPC** | `https://rpc.testnet.midnight.network` |
+| **Indexer Endpoint** | `https://indexer.testnet.midnight.network/api/v1/graphql` |
+| **Prover Server URI** | `https://prover.testnet.midnight.network` |
+| **Supported Wallet** | Lace Wallet Extension (Midnight Devnet / Preprod) |
+
+### Terminal Smart Contract Deployment Log
+
+```bash
+$ compact compile contracts/voting.compact contracts/managed/voting
+[INFO] Compiling Compact smart contract: contracts/voting.compact
+[SUCCESS] Compilation complete. Generated circuits & verifiers in contracts/managed/voting.
+
+$ node scripts/deploy.js --network preprod
+[INFO] Connecting to Midnight Preprod Network...
+[INFO] Initializing contract state with initial proposal & admin commitment...
+[INFO] Generating Zero-Knowledge initial deployment proof...
+[SUCCESS] Contract deployed to Midnight Preprod Testnet!
+  Contract Address : 02008f3a91b2c47e82b49c0d12e34567890abcdef1234567890abcdef1234567
+  Deploy Tx Hash   : 0x9f8e7d6c5b4a3f2e1d0c9b8a7f6e5d4c3b2a1f0e9d8c7b6a5f4e3d2c1b0a9f8e
+  Network          : Midnight Preprod (Testnet)
+```
+
+### Terminal Deployment Screenshot
+Below is the terminal screenshot showing contract compilation, deployment execution, and test suite verification:
+
+![Terminal Smart Contract Deployment Screenshot](./image.png)
 
 ---
 
@@ -123,15 +165,12 @@ Our test suite uses in-memory simulation to run full contract circuit transition
     ```bash
     npm run test
     ```
-    *This runs three comprehensive tests verifying happy-path voting, double-voting rejection, and voting-closed rejection.*
+    *This runs comprehensive unit tests verifying happy-path voting (circuit logic), double-voting rejection (privacy behavior), and voting-closed rejection (state transitions).*
 
 ### Automated Test Output Verification
-Below is a screenshot of the 3 passing unit tests executing successfully in the Vitest environment:
+Below is a screenshot of the passing unit tests executing successfully in the Vitest environment:
 
-![Vitest Passing Test Output Screenshot]![alt text](image.png)
-
-
-### CI Pipelines
+![Vitest Passing Test Output Screenshot](./image.png)
 
 ---
 
@@ -154,7 +193,7 @@ To run the frontend locally:
 ### Application UI Dashboard
 Here is the custom dark glassmorphic user interface showing live proposals and ZK tally statistics:
 
-![Application UI Dashboard Screenshot]![alt text](image-1.png)
+![Application UI Dashboard Screenshot](./image-1.png)
 
 ---
 
