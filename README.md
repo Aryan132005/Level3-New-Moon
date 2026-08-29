@@ -225,6 +225,19 @@ Ensure you have cast the `Uint8Array` to `any` or used `data.buffer` to pass the
 
 ---
 
+## August 2026 Upgrades
+
+The project was upgraded in August 2026 to enhance structure, security, and developer workflow:
+*   **Build Pipeline Standardization:** Aligned local `compile` output path in `package.json` with the path used by CI and contract loaders (`contracts/managed/voting`), removing the mismatched `src/generated` target.
+*   **Test Suite Optimization:** Consolidated redundant test cases from `src/test/` and `tests/` directories into the single test suite in `test/voting.test.ts`.
+*   **Expanded Security Verification:** Added an automated unit test verifying that closing voting fails securely when attempted with an unauthorized admin key.
+*   **Smart Contract Documentation:** Authored comprehensive inline comments in `contracts/voting.compact` explaining ledger variables, private witnesses, and circuit assertion boundaries.
+*   **API Quality Fixes:** Cleaned up duplicate return paths in `src/votingApi.ts` and added JSDoc documentation to all exported API functions.
+*   **UI/UX Improvements:** Added a premium August 2026 version badge to the main dashboard and introduced interactive show/hide toggles for sensitive private keys in the UI deployment panel.
+
+---
+
 ## License
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+

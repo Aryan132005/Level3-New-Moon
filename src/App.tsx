@@ -20,6 +20,7 @@ export function App() {
   const [newProposalText, setNewProposalText] = useState('');
   const [deployAdminSecret, setDeployAdminSecret] = useState('');
   const [isDeploying, setIsDeploying] = useState(false);
+  const [showDeploySecret, setShowDeploySecret] = useState(false);
   
   // Voting inputs
   const [voterSecret, setVoterSecret] = useState('');
@@ -225,7 +226,10 @@ export function App() {
         <div className="logo-container">
           <div className="logo-icon">M</div>
           <div>
-            <h1 className="logo-text">Midnight Voting</h1>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <h1 className="logo-text">Midnight Voting</h1>
+              <span className="badge badge-august" style={{ fontSize: '0.65rem', background: 'rgba(255, 255, 255, 0.1)', color: '#fff', border: '1px solid rgba(255,255,255,0.2)' }}>v1.1 (August 2026)</span>
+            </div>
             <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Privacy-preserving L1 Zero-Knowledge Voting</p>
           </div>
         </div>
@@ -435,13 +439,21 @@ export function App() {
                 <label className="form-label">Admin Secret Key (Hex)</label>
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
                   <input
-                    type="password"
+                    type={showDeploySecret ? "text" : "password"}
                     className="form-input"
                     placeholder="Key to authorize closure of this voting period"
                     value={deployAdminSecret}
                     onChange={(e) => setDeployAdminSecret(e.target.value)}
                     required
                   />
+                  <button
+                    type="button"
+                    className="btn btn-secondary btn-action"
+                    onClick={() => setShowDeploySecret(!showDeploySecret)}
+                    disabled={isDeploying || !deployAdminSecret}
+                  >
+                    {showDeploySecret ? 'Hide' : 'Show'}
+                  </button>
                   <button
                     type="button"
                     className="btn btn-secondary btn-action"

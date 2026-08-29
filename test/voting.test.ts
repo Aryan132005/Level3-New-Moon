@@ -118,4 +118,31 @@ describe('Private Voting Smart Contract Tests', () => {
       contract.circuits.castVote(closeResult.context);
     }).toThrowError('failed assert: Voting is closed');
   });
+
+  it('Admin Authorization: closing voting with invalid key must throw error', () => {
+    const mockWitnesses = {
+      voterSecretKey: (context: any) => [context.currentPrivateState, new Uint8Array(32)] as [any, Uint8Array],
+      voteChoice: (context: any) => [context.currentPrivateState, true] as [any, boolean],
+      adminSecretKey: (context: any) => [context.currentPrivateState, new Uint8Array(32)] as [any, Uint8Array] // Invalid key (all zeros)
+    };
+
+    const contract = new Contract(mockWitnesses);
+    const constructorContext = createConstructorContext({}, dummyCoinPublicKey as any);
+
+    // Initialize state
+    const initResult = contract.initialState(constructorContext, proposalId, proposalText, adminCommit);
+
+    // Attempt to close voting with incorrect admin key -> must throw assertion error
+    const closeContext = createCircuitContext(
+      dummyContractAddress(),
+      dummyCoinPublicKey as any,
+      initResult.currentContractState,
+      {}
+    );
+    
+    expect(() => {
+      contract.circuits.closeVoting(closeContext);
+    }).toThrowError('failed assert: Unauthorized admin');
+  });
 });
+

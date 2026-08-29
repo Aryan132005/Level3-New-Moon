@@ -80,7 +80,7 @@ export class Contract {
         if (!(typeof(contextOrig_0) === 'object' && contextOrig_0.currentQueryContext != undefined)) {
           __compactRuntime.typeError('castVote',
                                      'argument 1 (as invoked from Typescript)',
-                                     'voting.compact line 28 char 1',
+                                     'voting.compact line 44 char 1',
                                      'CircuitContext',
                                      contextOrig_0)
         }
@@ -103,7 +103,7 @@ export class Contract {
         if (!(typeof(contextOrig_0) === 'object' && contextOrig_0.currentQueryContext != undefined)) {
           __compactRuntime.typeError('closeVoting',
                                      'argument 1 (as invoked from Typescript)',
-                                     'voting.compact line 54 char 1',
+                                     'voting.compact line 74 char 1',
                                      'CircuitContext',
                                      contextOrig_0)
         }
@@ -151,14 +151,14 @@ export class Contract {
     if (!(pId_0.buffer instanceof ArrayBuffer && pId_0.BYTES_PER_ELEMENT === 1 && pId_0.length === 32)) {
       __compactRuntime.typeError('Contract state constructor',
                                  'argument 1 (argument 2 as invoked from Typescript)',
-                                 'voting.compact line 20 char 1',
+                                 'voting.compact line 29 char 1',
                                  'Bytes<32>',
                                  pId_0)
     }
     if (!(adminCommit_0.buffer instanceof ArrayBuffer && adminCommit_0.BYTES_PER_ELEMENT === 1 && adminCommit_0.length === 32)) {
       __compactRuntime.typeError('Contract state constructor',
                                  'argument 3 (argument 4 as invoked from Typescript)',
-                                 'voting.compact line 20 char 1',
+                                 'voting.compact line 29 char 1',
                                  'Bytes<32>',
                                  adminCommit_0)
     }
@@ -314,7 +314,7 @@ export class Contract {
     if (!(result_0.buffer instanceof ArrayBuffer && result_0.BYTES_PER_ELEMENT === 1 && result_0.length === 32)) {
       __compactRuntime.typeError('voterSecretKey',
                                  'return value',
-                                 'voting.compact line 15 char 1',
+                                 'voting.compact line 21 char 1',
                                  'Bytes<32>',
                                  result_0)
     }
@@ -331,7 +331,7 @@ export class Contract {
     if (!(typeof(result_0) === 'boolean')) {
       __compactRuntime.typeError('voteChoice',
                                  'return value',
-                                 'voting.compact line 16 char 1',
+                                 'voting.compact line 22 char 1',
                                  'Boolean',
                                  result_0)
     }
@@ -348,7 +348,7 @@ export class Contract {
     if (!(result_0.buffer instanceof ArrayBuffer && result_0.BYTES_PER_ELEMENT === 1 && result_0.length === 32)) {
       __compactRuntime.typeError('adminSecretKey',
                                  'return value',
-                                 'voting.compact line 17 char 1',
+                                 'voting.compact line 23 char 1',
                                  'Bytes<32>',
                                  result_0)
     }
@@ -610,7 +610,7 @@ export function ledger(stateOrChargedState) {
         if (!(key_0.buffer instanceof ArrayBuffer && key_0.BYTES_PER_ELEMENT === 1 && key_0.length === 32)) {
           __compactRuntime.typeError('member',
                                      'argument 1',
-                                     'voting.compact line 10 char 1',
+                                     'voting.compact line 13 char 1',
                                      'Bytes<32>',
                                      key_0)
         }
@@ -639,7 +639,7 @@ export function ledger(stateOrChargedState) {
         if (!(key_0.buffer instanceof ArrayBuffer && key_0.BYTES_PER_ELEMENT === 1 && key_0.length === 32)) {
           __compactRuntime.typeError('lookup',
                                      'argument 1',
-                                     'voting.compact line 10 char 1',
+                                     'voting.compact line 13 char 1',
                                      'Bytes<32>',
                                      key_0)
         }

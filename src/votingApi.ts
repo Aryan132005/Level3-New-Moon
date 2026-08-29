@@ -288,10 +288,17 @@ export async function createMidnightProviders(api: any, walletAddress: string): 
 }
 
 /**
- * Voting API Wrapper supporting both Lace Wallet and Simulator
+ * Voting API Wrapper supporting both Lace Wallet integration and Simulator mode.
  */
 export const VotingAPI = {
-  // Deploy a new Proposal
+  /**
+   * Deploys a new ZK Voting proposal contract.
+   * 
+   * @param proposalText The description of the proposal.
+   * @param adminSecretHex Hexadecimal secret key of the administrator.
+   * @param mode Selected environment mode ('lace' or 'simulator').
+   * @returns The contract address of the deployed proposal.
+   */
   deployProposal: async (
     proposalText: string,
     adminSecretHex: string,
@@ -369,7 +376,14 @@ export const VotingAPI = {
     }
   },
 
-  // Cast a Vote (YES/NO)
+  /**
+   * Casts an anonymous vote on a proposal.
+   * 
+   * @param contractAddress The address of the deployed proposal.
+   * @param voterSecretHex The voter's private secret key (hex representation).
+   * @param choice True for YES vote, false for NO vote.
+   * @param mode Selected environment mode ('lace' or 'simulator').
+   */
   castVote: async (
     contractAddress: string,
     voterSecretHex: string,
@@ -436,7 +450,13 @@ export const VotingAPI = {
     }
   },
 
-  // Close Voting (Admin only)
+  /**
+   * Closes the voting period. Admin only.
+   * 
+   * @param contractAddress The address of the deployed proposal.
+   * @param adminSecretHex The administrator's secret key (hex representation).
+   * @param mode Selected environment mode ('lace' or 'simulator').
+   */
   closeVoting: async (
     contractAddress: string,
     adminSecretHex: string,
@@ -487,7 +507,12 @@ export const VotingAPI = {
     }
   },
 
-  // Fetch Proposals List
+  /**
+   * Retrieves the current list of proposals and queries latest on-chain ledger tallies.
+   * 
+   * @param mode Selected environment mode ('lace' or 'simulator').
+   * @returns An array of ProposalState objects.
+   */
   getProposals: async (mode: 'lace' | 'simulator'): Promise<ProposalState[]> => {
     if (mode === 'lace') {
       const localProposals = getLaceProposals();
@@ -519,7 +544,6 @@ export const VotingAPI = {
             updatedProposals.push(prop);
           }
         }
-        return updatedProposals;
         return updatedProposals;
       } catch {
         return localProposals;
