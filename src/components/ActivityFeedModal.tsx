@@ -36,7 +36,7 @@ export function ActivityFeedModal({ isOpen, onClose }: ActivityFeedModalProps) {
               <Activity className="w-5 h-5 text-cyan-400" />
             </div>
             <div>
-              <h2 className="modal-title">ZK Governance Activity Stream</h2>
+              <h2 className="modal-title">EclipseVote Activity Stream</h2>
               <p className="modal-subtitle">Real-time cryptographic ledger events</p>
             </div>
           </div>

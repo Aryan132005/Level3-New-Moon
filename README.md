@@ -1,4 +1,4 @@
-# Private Voting dApp on Midnight Blockchain
+# EclipseVote ZK — Private Voting dApp on Midnight Blockchain
 
 The video demonstration below shows the full functionality in action: proposal creation, random voter key generation, anonymous voting transitions, proof generation loading states, and administrative closure.
 ### Private Voting Walkthrough Demo Video
@@ -193,9 +193,13 @@ To run the frontend locally:
 ### Application UI Dashboard
 Here is the custom dark glassmorphic user interface showing live proposals and ZK tally statistics:
 
-![Application UI Dashboard Screenshot](./image-1.png)
+![Application UI Dashboard Screenshot](./image-2.png)
 
----
+**Zero-Knowledge Ballot Receipt**
+![Zero-Knowledge Ballot Receipt](./image-3.png)
+
+**CI/CD Pipeline**
+![CI Pipeline Passing](./image-4.png)
 
 ## CI/CD Pipeline
 

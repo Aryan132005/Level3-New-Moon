@@ -387,7 +387,7 @@ export function App() {
       <div className="stats-banner">
         <div className="stat-card glass-panel">
           <div className="stat-icon-wrapper">
-            <Vote className="w-5 h-5 text-purple-400" />
+            <Vote className="w-5 h-5 text-emerald-400" />
           </div>
           <div>
             <div className="stat-number">{aggregateStats.totalProps}</div>
@@ -407,7 +407,7 @@ export function App() {
 
         <div className="stat-card glass-panel">
           <div className="stat-icon-wrapper">
-            <Unlock className="w-5 h-5 text-emerald-400" />
+            <Unlock className="w-5 h-5 text-teal-400" />
           </div>
           <div>
             <div className="stat-number">{aggregateStats.activeProps}</div>
@@ -417,7 +417,7 @@ export function App() {
 
         <div className="stat-card glass-panel">
           <div className="stat-icon-wrapper">
-            <Hash className="w-5 h-5 text-amber-400" />
+            <Hash className="w-5 h-5 text-emerald-300" />
           </div>
           <div>
             <div className="stat-number">{aggregateStats.totalNullifiers}</div>
@@ -433,7 +433,7 @@ export function App() {
         </div>
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <h3 className="text-sm font-semibold text-white">Midnight Zero-Knowledge Privacy Guarantees</h3>
+            <h3 className="text-sm font-semibold text-white">EclipseVote ZK Privacy & Cryptographic Guarantees</h3>
             <span className="badge badge-network">Compact Circuit v0.23</span>
           </div>
           <p className="text-xs text-gray-300 leading-relaxed">
@@ -470,13 +470,13 @@ export function App() {
 
           <div className="flex rounded-lg border border-white/10 p-0.5 bg-black/20">
             <button
-              className={`px-2.5 py-1 text-xs rounded-md transition-colors ${statusFilter === 'all' ? 'bg-purple-600/30 text-white font-semibold' : 'text-gray-400 hover:text-white'}`}
+              className={`px-2.5 py-1 text-xs rounded-md transition-colors ${statusFilter === 'all' ? 'bg-emerald-500/20 text-emerald-300 font-semibold border border-emerald-500/30' : 'text-gray-400 hover:text-white'}`}
               onClick={() => setStatusFilter('all')}
             >
               All
             </button>
             <button
-              className={`px-2.5 py-1 text-xs rounded-md transition-colors ${statusFilter === 'open' ? 'bg-emerald-600/30 text-emerald-300 font-semibold' : 'text-gray-400 hover:text-white'}`}
+              className={`px-2.5 py-1 text-xs rounded-md transition-colors ${statusFilter === 'open' ? 'bg-emerald-500/20 text-emerald-300 font-semibold border border-emerald-500/30' : 'text-gray-400 hover:text-white'}`}
               onClick={() => setStatusFilter('open')}
             >
               Open
@@ -787,11 +787,11 @@ export function App() {
           <div className="glass-panel p-5 rounded-2xl">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-sm font-semibold text-white flex items-center gap-2">
-                <Layers className="w-4 h-4 text-purple-400" />
+                <Layers className="w-4 h-4 text-emerald-400" />
                 <span>Governance Proposals ({filteredProposals.length})</span>
               </h3>
               <button
-                className="text-xs text-purple-400 hover:text-purple-300 font-semibold"
+                className="text-xs text-emerald-400 hover:text-emerald-300 font-semibold flex items-center gap-1"
                 onClick={() => setIsDeployOpen(true)}
               >
                 + New

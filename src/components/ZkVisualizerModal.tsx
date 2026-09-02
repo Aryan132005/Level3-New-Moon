@@ -35,12 +35,12 @@ export function ZkVisualizerModal({
     {
       title: 'ZK Circuit Constraint Proof',
       desc: 'Generating mathematical zero-knowledge proof enforcing eligibility & freshness.',
-      icon: <Cpu className="w-4 h-4 text-purple-400" />
+      icon: <Cpu className="w-4 h-4 text-emerald-400" />
     },
     {
       title: 'Atomic On-Chain State Transition',
       desc: 'Spending nullifier and publicly incrementing tally without revealing ballot choice.',
-      icon: <Database className="w-4 h-4 text-emerald-400" />
+      icon: <Database className="w-4 h-4 text-cyan-400" />
     }
   ];
 
@@ -50,11 +50,11 @@ export function ZkVisualizerModal({
         <div className="zk-visualizer-header">
           <div className="flex items-center gap-3">
             <div className="circuit-pulse-badge">
-              <Cpu className="w-5 h-5 text-purple-300 animate-pulse" />
+              <Cpu className="w-5 h-5 text-emerald-300 animate-pulse" />
             </div>
             <div>
               <h2 className="modal-title">Zero-Knowledge Circuit Execution</h2>
-              <p className="modal-subtitle">Midnight Compact ZK Prover & Constraint Verifier</p>
+              <p className="modal-subtitle">EclipseVote Compact ZK Prover & Constraint Verifier</p>
             </div>
           </div>
         </div>
@@ -108,10 +108,10 @@ export function ZkVisualizerModal({
             {/* Cryptographic Execution Terminal / Telemetry */}
             <div className="circuit-terminal font-mono text-xs">
               <div className="terminal-line text-gray-400">
-                <span className="text-purple-400">witness voterSecretKey:</span> {voterSecretMasked}
+                <span className="text-teal-400">witness voterSecretKey:</span> {voterSecretMasked}
               </div>
               <div className="terminal-line text-gray-400">
-                <span className="text-purple-400">witness voteChoice:</span> {choice ? 'TRUE (YES)' : 'FALSE (NO)'}
+                <span className="text-teal-400">witness voteChoice:</span> {choice ? 'TRUE (YES)' : 'FALSE (NO)'}
               </div>
               <div className="terminal-line text-gray-400">
                 <span className="text-cyan-400">ledger proposalId:</span> {proposalId.slice(0, 16)}...

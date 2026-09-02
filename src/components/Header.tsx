@@ -1,5 +1,5 @@
 import { VoterIdentity, isLaceAvailable } from '../votingApi';
-import { Shield, Key, Activity, RefreshCw, Wallet } from 'lucide-react';
+import { Key, Activity, RefreshCw, Wallet } from 'lucide-react';
 
 interface HeaderProps {
   mode: 'simulator' | 'lace';
@@ -29,17 +29,27 @@ export function Header({
         <div className="brand-logo-container">
           <div className="brand-logo-glow" />
           <div className="brand-logo">
-            <Shield className="w-5 h-5 text-white" />
+            <svg className="w-5 h-5 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <defs>
+                <linearGradient id="auroraHeaderGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#10b981" />
+                  <stop offset="100%" stopColor="#06b6d4" />
+                </linearGradient>
+              </defs>
+              <circle cx="12" cy="12" r="9" stroke="url(#auroraHeaderGrad)" strokeWidth="2" />
+              <path d="M12 3a9 9 0 0 0 0 18 6.5 6.5 0 0 1 0-18z" fill="url(#auroraHeaderGrad)" opacity="0.85" />
+            </svg>
           </div>
         </div>
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="brand-title">Midnight ZK Governance</h1>
+            <h1 className="brand-title">EclipseVote ZK</h1>
             <span className="badge badge-network">Midnight L1</span>
             <span className="badge badge-zk">ZK-SNARK</span>
+            <span className="badge badge-aurora hidden md:inline-flex">Celestial Aurora</span>
           </div>
           <p className="brand-tagline">
-            Anonymous decentralized balloting powered by Compact Zero-Knowledge circuits
+            Next-gen anonymous decentralized governance powered by Compact Zero-Knowledge circuits
           </p>
         </div>
       </div>
@@ -70,14 +80,14 @@ export function Header({
           onClick={onOpenActivityFeed}
           title="Open Activity Stream"
         >
-          <Activity className="w-4 h-4 text-purple-400" />
+          <Activity className="w-4 h-4 text-emerald-400" />
           <span className="hidden md:inline text-xs font-medium">Activity</span>
         </button>
 
         {/* Network / Wallet status */}
         {mode === 'simulator' ? (
           <div className="badge badge-simulator flex items-center gap-1.5">
-            <span className="status-dot-pulse bg-purple-400" />
+            <span className="status-dot-pulse bg-emerald-400" />
             <span className="text-xs font-semibold">Simulator Sandbox</span>
           </div>
         ) : (
