@@ -1,5 +1,42 @@
-import React, { useState, useEffect } from 'react';
-import { VotingAPI, ProposalState, isLaceAvailable, connectLaceWallet, toHex } from './votingApi';
+import React, { useState, useEffect, useMemo } from 'react';
+import confetti from 'canvas-confetti';
+import {
+  VotingAPI,
+  ProposalState,
+  VoterIdentity,
+  VotingReceipt,
+  getSavedIdentities,
+  deriveNullifier,
+  isLaceAvailable,
+  connectLaceWallet,
+  toHex
+} from './votingApi';
+
+import { Header } from './components/Header';
+import { KeyVaultModal } from './components/KeyVaultModal';
+import { ZkVisualizerModal } from './components/ZkVisualizerModal';
+import { ReceiptModal } from './components/ReceiptModal';
+import { NullifierExplorer } from './components/NullifierExplorer';
+import { ActivityFeedModal } from './components/ActivityFeedModal';
+import { DeployProposalModal } from './components/DeployProposalModal';
+
+import {
+  Shield,
+  Vote,
+  Hash,
+  Search,
+  CheckCircle2,
+  Lock,
+  Unlock,
+  Users,
+  Code2,
+  Layers,
+  Sparkles,
+  TrendingUp,
+  AlertTriangle,
+  FileCode,
+  KeyRound
+} from 'lucide-react';
 
 interface Toast {
   id: string;
@@ -8,64 +45,121 @@ interface Toast {
 }
 
 export function App() {
-  // Mode selection: 'simulator' (default sandbox) or 'lace' (live wallet)
+  // Environment mode
   const [mode, setMode] = useState<'simulator' | 'lace'>('simulator');
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
-  
-  // Proposals list
+
+  // Proposals & Navigation
   const [proposals, setProposals] = useState<ProposalState[]>([]);
   const [activeProposalId, setActiveProposalId] = useState<string | null>(null);
-  
-  // Deployment inputs
-  const [newProposalText, setNewProposalText] = useState('');
-  const [deployAdminSecret, setDeployAdminSecret] = useState('');
+  const [activeTab, setActiveTab] = useState<'overview' | 'nullifiers' | 'spec'>('overview');
+
+  // Filters & Search
+  const [categoryFilter, setCategoryFilter] = useState<string>('All');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'open' | 'closed'>('all');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Key Vault & Identity
+  const [activeIdentity, setActiveIdentity] = useState<VoterIdentity | null>(() => {
+    const ids = getSavedIdentities();
+    return ids.length > 0 ? ids[0] : null;
+  });
+
+  // Modals state
+  const [isKeyVaultOpen, setIsKeyVaultOpen] = useState(false);
+  const [isActivityFeedOpen, setIsActivityFeedOpen] = useState(false);
+  const [isDeployOpen, setIsDeployOpen] = useState(false);
   const [isDeploying, setIsDeploying] = useState(false);
-  const [showDeploySecret, setShowDeploySecret] = useState(false);
-  
-  // Voting inputs
-  const [voterSecret, setVoterSecret] = useState('');
-  const [isVoting, setIsVoting] = useState(false);
-  
-  // Close voting inputs
+
+  // ZK Circuit Visualizer state
+  const [zkVisualizer, setZkVisualizer] = useState<{
+    isOpen: boolean;
+    step: number;
+    choice: boolean;
+    voterSecretMasked: string;
+    proposalId: string;
+    derivedNullifier?: string;
+  }>({
+    isOpen: false,
+    step: 0,
+    choice: true,
+    voterSecretMasked: '',
+    proposalId: ''
+  });
+
+  // Receipt modal state
+  const [latestReceipt, setLatestReceipt] = useState<VotingReceipt | null>(null);
+
+  // Admin closure state
   const [adminSecret, setAdminSecret] = useState('');
   const [isClosing, setIsClosing] = useState(false);
 
-  // Toast notifications
+  // Voting state
+  const [isVoting, setIsVoting] = useState(false);
+
+  // Toasts
   const [toasts, setToasts] = useState<Toast[]>([]);
 
-  // Add toast alert
   const showToast = (type: 'success' | 'error' | 'info', message: string) => {
-    const id = Date.now().toString();
+    const id = Date.now().toString() + Math.random().toString(36).substring(2, 6);
     setToasts((prev) => [...prev, { id, type, message }]);
     setTimeout(() => {
       setToasts((prev) => prev.filter((t) => t.id !== id));
     }, 4000);
   };
 
-  // Enforce some seed proposals in simulator mode if none exist
+  // Seed sample proposals if simulator is empty
   useEffect(() => {
     const loadProposals = async () => {
       try {
         const list = await VotingAPI.getProposals(mode);
         if (mode === 'simulator' && list.length === 0) {
-          // Add a default template proposal
-          const adminSeed = new Uint8Array(32);
-          adminSeed[0] = 99;
-          const adminSecretHex = toHex(adminSeed);
-          const defaultAddress = await VotingAPI.deployProposal(
-            "Should we adopt Midnight as our primary privacy L1 blockchain?",
-            adminSecretHex,
-            'simulator'
+          // Proposal 1: Core Midnight protocol upgrade
+          const admin1 = new Uint8Array(32);
+          admin1[0] = 11;
+          const p1 = await VotingAPI.deployProposal(
+            "MIP-104: Upgrade Zero-Knowledge Proof Aggregation circuit for Midnight Layer 1",
+            toHex(admin1),
+            'simulator',
+            'Protocol',
+            15
           );
-          
-          // Cast a default Yes vote to show initial data
-          const voterSeed = new Uint8Array(32);
-          voterSeed[0] = 55;
-          await VotingAPI.castVote(defaultAddress, toHex(voterSeed), true, 'simulator');
-          
+
+          // Seed a couple of initial votes
+          const v1 = new Uint8Array(32); v1[0] = 101;
+          const v2 = new Uint8Array(32); v2[0] = 102;
+          const v3 = new Uint8Array(32); v3[0] = 103;
+          await VotingAPI.castVote(p1, toHex(v1), true, 'simulator');
+          await VotingAPI.castVote(p1, toHex(v2), true, 'simulator');
+          await VotingAPI.castVote(p1, toHex(v3), false, 'simulator');
+
+          // Proposal 2: Treasury Allocation
+          const admin2 = new Uint8Array(32);
+          admin2[0] = 22;
+          const p2 = await VotingAPI.deployProposal(
+            "Allocate 500,000 NIGHT tokens to the ZK Privacy Research & Developer Grant Fund",
+            toHex(admin2),
+            'simulator',
+            'Treasury',
+            20
+          );
+          const v4 = new Uint8Array(32); v4[0] = 104;
+          await VotingAPI.castVote(p2, toHex(v4), true, 'simulator');
+
+          // Proposal 3: Security Policy
+          const admin3 = new Uint8Array(32);
+          admin3[0] = 33;
+          await VotingAPI.deployProposal(
+            "Enforce mandatory Merkle proof verification for cross-chain bridge validators",
+            toHex(admin3),
+            'simulator',
+            'Security',
+            10
+          );
+
           const updatedList = await VotingAPI.getProposals(mode);
           setProposals(updatedList);
-          setActiveProposalId(defaultAddress);
+          setActiveProposalId(p1);
         } else {
           setProposals(list);
           if (list.length > 0 && !activeProposalId) {
@@ -90,7 +184,7 @@ export function App() {
       const connection = await connectLaceWallet();
       setWalletAddress(connection.address);
       setMode('lace');
-      showToast('success', 'Connected to Lace Wallet!');
+      showToast('success', 'Connected to Lace Wallet on Midnight Testnet!');
     } catch (err: any) {
       showToast('error', `Wallet connection failed: ${err.message}`);
     }
@@ -98,37 +192,28 @@ export function App() {
 
   // Reset Sandbox state
   const handleResetSandbox = () => {
-    if (window.confirm("Are you sure you want to clear all sandbox proposals and reset the state?")) {
+    if (window.confirm("Reset sandbox state? This will reinitialize default ZK proposals.")) {
       localStorage.removeItem('midnight_voting_proposals');
+      localStorage.removeItem('midnight_activity_events');
       window.location.reload();
     }
   };
 
   // Deploy Proposal
-  const handleDeploy = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newProposalText.trim()) {
-      showToast('error', 'Proposal description cannot be empty.');
-      return;
-    }
-    if (!deployAdminSecret || deployAdminSecret.length < 4) {
-      showToast('error', 'Provide a valid hexadecimal admin secret key (e.g. 64 characters).');
-      return;
-    }
-
+  const handleDeployProposal = async (
+    text: string,
+    adminSecretHex: string,
+    category: 'Governance' | 'Protocol' | 'Treasury' | 'Security' | 'Community',
+    quorum: number
+  ) => {
     setIsDeploying(true);
     try {
-      const address = await VotingAPI.deployProposal(newProposalText, deployAdminSecret, mode);
-      showToast('success', 'Proposal smart contract deployed successfully!');
+      const address = await VotingAPI.deployProposal(text, adminSecretHex, mode, category, quorum);
+      showToast('success', 'ZK Proposal contract deployed successfully!');
       
-      // Refresh list
       const list = await VotingAPI.getProposals(mode);
       setProposals(list);
       setActiveProposalId(address);
-      
-      // Reset forms
-      setNewProposalText('');
-      setDeployAdminSecret('');
     } catch (err: any) {
       showToast('error', `Deployment failed: ${err.message}`);
     } finally {
@@ -136,378 +221,665 @@ export function App() {
     }
   };
 
-  // Cast Vote
+  // Cast Vote with Animated ZK Circuit Visualizer
   const handleCastVote = async (choice: boolean) => {
-    if (!activeProposalId) return;
-    if (!voterSecret) {
-      showToast('error', 'Voter private secret key is required.');
+    if (!activeProposalId || !activeIdentity) {
+      showToast('error', 'Please select or create an identity in the Key Vault.');
+      setIsKeyVaultOpen(true);
+      return;
+    }
+
+    const proposal = proposals.find((p) => p.address === activeProposalId);
+    if (!proposal) return;
+
+    if (!proposal.votingOpen) {
+      showToast('error', 'Voting on this proposal is closed.');
       return;
     }
 
     setIsVoting(true);
+    const maskedSecret = activeIdentity.secretKeyHex.slice(0, 8) + '...' + activeIdentity.secretKeyHex.slice(-6);
+
+    // Launch ZK visualizer simulation modal
+    setZkVisualizer({
+      isOpen: true,
+      step: 1,
+      choice,
+      voterSecretMasked: maskedSecret,
+      proposalId: proposal.proposalId
+    });
+
     try {
-      showToast('info', 'Generating zero-knowledge proof client-side...');
-      await VotingAPI.castVote(activeProposalId, voterSecret, choice, mode);
-      showToast('success', `Ballot successfully recorded! nullifier registered.`);
+      // Step 2: Nullifier Derivation
+      await new Promise((r) => setTimeout(r, 600));
+      const nullifier = await deriveNullifier(activeIdentity.secretKeyHex, proposal.proposalId);
+
+      setZkVisualizer((prev) => ({
+        ...prev,
+        step: 2,
+        derivedNullifier: nullifier
+      }));
+
+      // Check if already voted
+      if (proposal.nullifiers.includes(nullifier)) {
+        throw new Error('Double voting is not allowed. This nullifier has already voted.');
+      }
+
+      // Step 3: ZK Proof Computation
+      await new Promise((r) => setTimeout(r, 700));
+      setZkVisualizer((prev) => ({ ...prev, step: 3 }));
+
+      // Step 4: Ledger Execution
+      await new Promise((r) => setTimeout(r, 600));
+      const receipt = await VotingAPI.castVote(activeProposalId, activeIdentity.secretKeyHex, choice, mode);
       
-      // Refresh list
+      setZkVisualizer((prev) => ({ ...prev, step: 4 }));
+
+      // Refresh proposals
       const list = await VotingAPI.getProposals(mode);
       setProposals(list);
-      setVoterSecret('');
+
+      // Trigger celebratory confetti
+      confetti({
+        particleCount: 80,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: choice ? ['#10b981', '#06b6d4', '#ffffff'] : ['#f43f5e', '#f59e0b', '#ffffff']
+      });
+
+      setLatestReceipt(receipt);
+      showToast('success', `Anonymous ballot successfully recorded on-chain!`);
     } catch (err: any) {
+      setZkVisualizer((prev) => ({ ...prev, isOpen: false }));
       showToast('error', `Vote rejected: ${err.message}`);
     } finally {
       setIsVoting(false);
     }
   };
 
-  // Close Voting
+  // Close Voting (Admin)
   const handleCloseVoting = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!activeProposalId) return;
-    if (!adminSecret) {
-      showToast('error', 'Admin secret key is required to close voting.');
+    if (!adminSecret.trim()) {
+      showToast('error', 'Admin secret key is required.');
       return;
     }
 
     setIsClosing(true);
     try {
-      showToast('info', 'Submitting close transaction...');
-      await VotingAPI.closeVoting(activeProposalId, adminSecret, mode);
-      showToast('success', 'Voting period successfully closed.');
-      
-      // Refresh list
+      showToast('info', 'Validating admin commitment and closing circuit...');
+      await VotingAPI.closeVoting(activeProposalId, adminSecret.trim(), mode);
+      showToast('success', 'Voting period successfully frozen on-chain.');
+
       const list = await VotingAPI.getProposals(mode);
       setProposals(list);
       setAdminSecret('');
     } catch (err: any) {
-      showToast('error', `Close failed: ${err.message}`);
+      showToast('error', `Failed to close: ${err.message}`);
     } finally {
       setIsClosing(false);
     }
   };
 
-  // Helper to generate a random 32-byte hexadecimal key
-  const generateRandomHexKey = (setter: (val: string) => void) => {
-    const key = new Uint8Array(32);
-    if (typeof window !== 'undefined' && window.crypto) {
-      window.crypto.getRandomValues(key);
-    } else {
-      for (let i = 0; i < 32; i++) {
-        key[i] = Math.floor(Math.random() * 256);
-      }
-    }
-    setter(toHex(key));
-    showToast('info', 'Generated new cryptographic secret key.');
-  };
+  // Filtered proposals list
+  const filteredProposals = useMemo(() => {
+    return proposals.filter((p) => {
+      const matchesCategory = categoryFilter === 'All' || p.category === categoryFilter;
+      const matchesStatus =
+        statusFilter === 'all' ||
+        (statusFilter === 'open' && p.votingOpen) ||
+        (statusFilter === 'closed' && !p.votingOpen);
+      const matchesSearch =
+        p.proposalText.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        p.address.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (p.category && p.category.toLowerCase().includes(searchQuery.toLowerCase()));
+      return matchesCategory && matchesStatus && matchesSearch;
+    });
+  }, [proposals, categoryFilter, statusFilter, searchQuery]);
 
-  // Active proposal details
-  const activeProposal = proposals.find(p => p.address === activeProposalId);
-
-  // Compute percentages
+  // Active Proposal stats
+  const activeProposal = proposals.find((p) => p.address === activeProposalId);
   const totalVotes = activeProposal ? activeProposal.yesTally + activeProposal.noTally : 0;
   const yesPercent = totalVotes > 0 ? Math.round((activeProposal!.yesTally / totalVotes) * 100) : 0;
   const noPercent = totalVotes > 0 ? Math.round((activeProposal!.noTally / totalVotes) * 100) : 0;
+  const quorumTarget = activeProposal?.quorumTarget || 10;
+  const quorumPercent = Math.min(100, Math.round((totalVotes / quorumTarget) * 100));
+
+  // Global aggregate stats
+  const aggregateStats = useMemo(() => {
+    const totalProps = proposals.length;
+    const totalBallots = proposals.reduce((acc, p) => acc + p.yesTally + p.noTally, 0);
+    const activeProps = proposals.filter((p) => p.votingOpen).length;
+    const totalNullifiers = proposals.reduce((acc, p) => acc + p.nullifiers.length, 0);
+    return { totalProps, totalBallots, activeProps, totalNullifiers };
+  }, [proposals]);
+
+  const categories = ['All', 'Governance', 'Protocol', 'Treasury', 'Security', 'Community'];
 
   return (
-    <div className="app-container">
+    <div className="app-wrapper">
       {/* Toast Notifications */}
       <div className="toast-container">
         {toasts.map((toast) => (
           <div key={toast.id} className={`toast toast-${toast.type}`}>
-            {toast.type === 'info' && <div className="spinner" />}
+            {toast.type === 'info' && <div className="spinner-sm" />}
+            {toast.type === 'success' && <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />}
+            {toast.type === 'error' && <AlertTriangle className="w-4 h-4 text-rose-400 flex-shrink-0" />}
             <div>{toast.message}</div>
           </div>
         ))}
       </div>
 
-      {/* Header Area */}
-      <header className="header">
-        <div className="logo-container">
-          <div className="logo-icon">M</div>
+      {/* Header */}
+      <Header
+        mode={mode}
+        walletAddress={walletAddress}
+        activeIdentity={activeIdentity}
+        onOpenKeyVault={() => setIsKeyVaultOpen(true)}
+        onOpenActivityFeed={() => setIsActivityFeedOpen(true)}
+        onConnectWallet={handleConnectWallet}
+        onResetSandbox={handleResetSandbox}
+        onOpenDeploy={() => setIsDeployOpen(true)}
+      />
+
+      {/* Aggregate Stats Banner */}
+      <div className="stats-banner">
+        <div className="stat-card glass-panel">
+          <div className="stat-icon-wrapper">
+            <Vote className="w-5 h-5 text-purple-400" />
+          </div>
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <h1 className="logo-text">Midnight Voting</h1>
-              <span className="badge badge-august" style={{ fontSize: '0.65rem', background: 'rgba(255, 255, 255, 0.1)', color: '#fff', border: '1px solid rgba(255,255,255,0.2)' }}>v1.1 (August 2026)</span>
-            </div>
-            <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Privacy-preserving L1 Zero-Knowledge Voting</p>
+            <div className="stat-number">{aggregateStats.totalProps}</div>
+            <div className="stat-label-text">ZK Proposals</div>
           </div>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          {mode === 'simulator' ? (
-            <span className="badge badge-simulator">● Sandbox Simulator</span>
-          ) : (
-            <span className="badge badge-lace">● Connected to Lace ({walletAddress?.slice(0, 8)}...)</span>
-          )}
-          
-          {mode === 'simulator' && (
-            <button className="btn btn-secondary btn-action" onClick={handleResetSandbox}>
-              Reset Sandbox
-            </button>
-          )}
-          {mode === 'simulator' && isLaceAvailable() && (
-            <button className="btn btn-secondary btn-action" onClick={handleConnectWallet}>
-              Connect Lace Wallet
-            </button>
-          )}
-        </div>
-      </header>
 
-      {/* Privacy Notice Banner */}
-      <div className="info-banner glass-panel">
-        <span className="info-banner-icon">🛡️</span>
-        <div>
-          <strong>Privacy Guarantees under Zero-Knowledge Proofs:</strong> Voters authorize themselves anonymously by utilizing private key materials to compute nullifiers inside a client-side ZK proof. No transaction link can associate your voter identity with your chosen YES/NO ballot. Only the final running tally increments publicly and verifiably.
+        <div className="stat-card glass-panel">
+          <div className="stat-icon-wrapper">
+            <Users className="w-5 h-5 text-cyan-400" />
+          </div>
+          <div>
+            <div className="stat-number">{aggregateStats.totalBallots}</div>
+            <div className="stat-label-text">Private Ballots Cast</div>
+          </div>
+        </div>
+
+        <div className="stat-card glass-panel">
+          <div className="stat-icon-wrapper">
+            <Unlock className="w-5 h-5 text-emerald-400" />
+          </div>
+          <div>
+            <div className="stat-number">{aggregateStats.activeProps}</div>
+            <div className="stat-label-text">Active Ballots Open</div>
+          </div>
+        </div>
+
+        <div className="stat-card glass-panel">
+          <div className="stat-icon-wrapper">
+            <Hash className="w-5 h-5 text-amber-400" />
+          </div>
+          <div>
+            <div className="stat-number">{aggregateStats.totalNullifiers}</div>
+            <div className="stat-label-text">Nullifiers Spent</div>
+          </div>
         </div>
       </div>
 
-      {/* Main Grid Content */}
-      <div className="grid-main">
-        {/* Left Side: Active Proposal & Vote casting */}
+      {/* Privacy Guarantee Banner */}
+      <div className="privacy-hero-banner glass-panel">
+        <div className="privacy-hero-icon">
+          <Shield className="w-5 h-5" />
+        </div>
         <div>
-          {/* Active Proposal View */}
+          <div className="flex items-center gap-2 mb-1">
+            <h3 className="text-sm font-semibold text-white">Midnight Zero-Knowledge Privacy Guarantees</h3>
+            <span className="badge badge-network">Compact Circuit v0.23</span>
+          </div>
+          <p className="text-xs text-gray-300 leading-relaxed">
+            Every ballot is verified using client-side ZK-SNARK proofs. No observer or validator can trace your wallet address to your YES/NO selection. Double-voting is mathematically blocked via deterministic one-way nullifier commitments (<code className="text-cyan-300 font-mono text-[11px]">nullifier = persistentHash(sk, proposalId)</code>).
+          </p>
+        </div>
+      </div>
+
+      {/* Filter & Search Bar */}
+      <div className="filter-bar">
+        <div className="category-filter-group">
+          {categories.map((cat) => (
+            <button
+              key={cat}
+              className={`filter-chip ${categoryFilter === cat ? 'active' : ''}`}
+              onClick={() => setCategoryFilter(cat)}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
+
+        <div className="flex items-center gap-2 flex-1 justify-end">
+          <div className="search-input-wrapper max-w-xs">
+            <Search className="search-icon w-3.5 h-3.5" />
+            <input
+              type="text"
+              className="search-input"
+              placeholder="Search proposals or contract..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+
+          <div className="flex rounded-lg border border-white/10 p-0.5 bg-black/20">
+            <button
+              className={`px-2.5 py-1 text-xs rounded-md transition-colors ${statusFilter === 'all' ? 'bg-purple-600/30 text-white font-semibold' : 'text-gray-400 hover:text-white'}`}
+              onClick={() => setStatusFilter('all')}
+            >
+              All
+            </button>
+            <button
+              className={`px-2.5 py-1 text-xs rounded-md transition-colors ${statusFilter === 'open' ? 'bg-emerald-600/30 text-emerald-300 font-semibold' : 'text-gray-400 hover:text-white'}`}
+              onClick={() => setStatusFilter('open')}
+            >
+              Open
+            </button>
+            <button
+              className={`px-2.5 py-1 text-xs rounded-md transition-colors ${statusFilter === 'closed' ? 'bg-rose-600/30 text-rose-300 font-semibold' : 'text-gray-400 hover:text-white'}`}
+              onClick={() => setStatusFilter('closed')}
+            >
+              Closed
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Grid: Detail View + Sidebar List */}
+      <div className="dashboard-grid">
+        {/* Left Side: Active Proposal Detailed View with Tabs */}
+        <div>
           {activeProposal ? (
-            <div className="glass-panel panel-card">
-              <div className="proposal-header">
-                <h2 style={{ color: 'white', marginBottom: '0.5rem' }}>{activeProposal.proposalText}</h2>
-                {activeProposal.votingOpen ? (
-                  <span className="badge badge-open">Voting Open</span>
-                ) : (
-                  <span className="badge badge-closed">Voting Closed</span>
-                )}
-              </div>
-              
-              <div className="proposal-meta">
-                <span>Contract ID: <span className="proposal-address">{activeProposal.address}</span></span>
-                <span>Nullifiers Spent: <strong>{activeProposal.nullifiers.length}</strong></span>
-              </div>
-
-              {/* Tally results */}
-              <div className="tally-container">
-                <h3 style={{ fontSize: '1rem', color: 'var(--text-primary)', marginBottom: '1rem', marginTop: '1.5rem' }}>
-                  Public Running Tally (ZK Verifiable)
-                </h3>
-                
-                <div className="tally-row">
-                  <span>YES Ballots</span>
-                  <strong>{activeProposal.yesTally} ({yesPercent}%)</strong>
-                </div>
-                <div className="tally-bar-bg">
-                  <div className="tally-bar-fill tally-bar-fill-yes" style={{ width: `${yesPercent}%` }}></div>
+            <div className="glass-panel proposal-detail-card">
+              {/* Proposal Header */}
+              <div className="proposal-detail-header">
+                <div className="flex justify-between items-start gap-4 mb-2">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {activeProposal.category && (
+                      <span className="badge badge-category flex items-center gap-1">
+                        <Layers className="w-3 h-3 text-purple-400" />
+                        {activeProposal.category}
+                      </span>
+                    )}
+                    {activeProposal.votingOpen ? (
+                      <span className="badge badge-open flex items-center gap-1">
+                        <Unlock className="w-3 h-3" /> Voting Active
+                      </span>
+                    ) : (
+                      <span className="badge badge-closed flex items-center gap-1">
+                        <Lock className="w-3 h-3" /> Voting Closed (Frozen)
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-[11px] font-mono text-gray-400 bg-white/5 px-2.5 py-1 rounded-full border border-white/5">
+                    {activeProposal.address.slice(0, 14)}...
+                  </span>
                 </div>
 
-                <div className="tally-row">
-                  <span>NO Ballots</span>
-                  <strong>{activeProposal.noTally} ({noPercent}%)</strong>
-                </div>
-                <div className="tally-bar-bg">
-                  <div className="tally-bar-fill tally-bar-fill-no" style={{ width: `${noPercent}%` }}></div>
-                </div>
+                <h2 className="proposal-detail-title">{activeProposal.proposalText}</h2>
               </div>
 
-              {/* Statistics Grid */}
-              <div className="stats-grid">
-                <div className="stat-box">
-                  <div className="stat-val">{totalVotes}</div>
-                  <div className="stat-label">Total Votes Cast</div>
-                </div>
-                <div className="stat-box">
-                  <div className="stat-val">{activeProposal.nullifiers.length}</div>
-                  <div className="stat-label">Registered Nullifiers</div>
-                </div>
+              {/* Detail Tabs */}
+              <div className="proposal-tabs">
+                <button
+                  className={`proposal-tab-btn ${activeTab === 'overview' ? 'active' : ''}`}
+                  onClick={() => setActiveTab('overview')}
+                >
+                  <Vote className="w-4 h-4" />
+                  <span>Ballot & Tally</span>
+                </button>
+                <button
+                  className={`proposal-tab-btn ${activeTab === 'nullifiers' ? 'active' : ''}`}
+                  onClick={() => setActiveTab('nullifiers')}
+                >
+                  <Hash className="w-4 h-4" />
+                  <span>Nullifier Explorer ({activeProposal.nullifiers.length})</span>
+                </button>
+                <button
+                  className={`proposal-tab-btn ${activeTab === 'spec' ? 'active' : ''}`}
+                  onClick={() => setActiveTab('spec')}
+                >
+                  <Code2 className="w-4 h-4" />
+                  <span>ZK Circuit & Ledger Spec</span>
+                </button>
               </div>
 
-              <hr style={{ border: 'none', borderBottom: '1px solid var(--border-glass)', margin: '2rem 0' }} />
-
-              {/* Vote Casting Panel */}
-              {activeProposal.votingOpen ? (
+              {/* Tab 1: Overview & Ballot Casting */}
+              {activeTab === 'overview' && (
                 <div>
-                  <h3 className="panel-title">🗳️ Cast Your Anonymous Vote</h3>
-                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '1rem' }}>
-                    Input your private secret key (as an eligibility commitment) and select choice. A client-side ZK proof will be computed, locking your nullifier and updating the tally.
-                  </p>
-                  
-                  <div className="form-group">
-                    <label className="form-label">Voter Cryptographic Secret Key (Hex)</label>
-                    <div style={{ display: 'flex', gap: '0.5rem' }}>
-                      <input
-                        type="text"
-                        className="form-input"
-                        placeholder="e.g. 32-byte hex string (64 characters)"
-                        value={voterSecret}
-                        onChange={(e) => setVoterSecret(e.target.value)}
+                  {/* Public Tally Card */}
+                  <div className="tally-card-container">
+                    <div className="flex justify-between items-center mb-4">
+                      <div className="flex items-center gap-2">
+                        <TrendingUp className="w-4 h-4 text-cyan-400" />
+                        <h4 className="text-sm font-semibold text-white">Public Running Tally (ZK-Verified)</h4>
+                      </div>
+                      <span className="text-xs font-mono text-gray-400">Total: {totalVotes} Ballots</span>
+                    </div>
+
+                    {/* YES Tally */}
+                    <div className="tally-vote-row">
+                      <span className="text-sm font-medium text-emerald-400 flex items-center gap-1.5">
+                        <CheckCircle2 className="w-4 h-4" /> YES
+                      </span>
+                      <span className="text-sm font-mono font-bold text-white">
+                        {activeProposal.yesTally} ({yesPercent}%)
+                      </span>
+                    </div>
+                    <div className="tally-progress-track">
+                      <div
+                        className="tally-progress-fill-yes"
+                        style={{ width: `${yesPercent}%` }}
                       />
-                      <button
-                        type="button"
-                        className="btn btn-secondary btn-action"
-                        onClick={() => generateRandomHexKey(setVoterSecret)}
-                        disabled={isVoting}
-                      >
-                        Generate Random
-                      </button>
+                    </div>
+
+                    {/* NO Tally */}
+                    <div className="tally-vote-row">
+                      <span className="text-sm font-medium text-rose-400 flex items-center gap-1.5">
+                        <Lock className="w-4 h-4" /> NO
+                      </span>
+                      <span className="text-sm font-mono font-bold text-white">
+                        {activeProposal.noTally} ({noPercent}%)
+                      </span>
+                    </div>
+                    <div className="tally-progress-track">
+                      <div
+                        className="tally-progress-fill-no"
+                        style={{ width: `${noPercent}%` }}
+                      />
+                    </div>
+
+                    {/* Quorum Meter */}
+                    <div className="quorum-bar-wrapper">
+                      <div className="flex justify-between items-center mb-1 text-xs">
+                        <span className="text-gray-400">Quorum Target ({quorumTarget} votes)</span>
+                        <span className="font-mono text-purple-300 font-semibold">{quorumPercent}% Reached</span>
+                      </div>
+                      <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-gradient-to-r from-purple-500 to-cyan-400 transition-all duration-500 rounded-full"
+                          style={{ width: `${quorumPercent}%` }}
+                        />
+                      </div>
                     </div>
                   </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '1.5rem' }}>
-                    <button
-                      className="btn btn-vote-yes"
-                      onClick={() => handleCastVote(true)}
-                      disabled={isVoting || !voterSecret}
-                    >
-                      {isVoting ? 'Proving YES...' : 'Vote YES'}
-                    </button>
-                    <button
-                      className="btn btn-vote-no"
-                      onClick={() => handleCastVote(false)}
-                      disabled={isVoting || !voterSecret}
-                    >
-                      {isVoting ? 'Proving NO...' : 'Vote NO'}
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div className="empty-state">
-                  <div className="empty-state-icon">🔒</div>
-                  <h4>This voting period has ended</h4>
-                  <p style={{ fontSize: '0.85rem', marginTop: '0.5rem' }}>
-                    The ZK circuit ledger state is now frozen. No further nullifiers can be spent and no ballots can be accepted.
-                  </p>
+                  {/* Anonymous Vote Submission */}
+                  {activeProposal.votingOpen ? (
+                    <div className="vote-action-box">
+                      <div className="flex justify-between items-center mb-2">
+                        <h3 className="text-sm font-semibold text-white flex items-center gap-2">
+                          <Sparkles className="w-4 h-4 text-cyan-400" />
+                          Cast Your Anonymous Zero-Knowledge Ballot
+                        </h3>
+                      </div>
+                      <p className="text-xs text-gray-400 mb-4">
+                        Voting derives a unique nullifier that spends your voting right for this proposal without ever leaking your identity or choice to the blockchain.
+                      </p>
+
+                      {/* Active Identity Selector Pill */}
+                      <div className="identity-quick-selector">
+                        <div className="flex items-center gap-2.5">
+                          <div className="vault-avatar">
+                            {activeIdentity ? activeIdentity.label.slice(0, 2).toUpperCase() : 'SK'}
+                          </div>
+                          <div>
+                            <div className="text-xs font-semibold text-white">
+                              {activeIdentity ? activeIdentity.label : 'No Key Selected'}
+                            </div>
+                            <div className="text-[10px] font-mono text-gray-400">
+                              {activeIdentity
+                                ? `${activeIdentity.secretKeyHex.slice(0, 10)}...${activeIdentity.secretKeyHex.slice(-6)}`
+                                : 'Click switch to generate key'}
+                            </div>
+                          </div>
+                        </div>
+
+                        <button
+                          type="button"
+                          className="btn btn-secondary text-xs py-1 px-2.5 flex items-center gap-1 text-cyan-400"
+                          onClick={() => setIsKeyVaultOpen(true)}
+                        >
+                          <KeyRound className="w-3 h-3" />
+                          <span>Switch Identity</span>
+                        </button>
+                      </div>
+
+                      {/* Vote Buttons */}
+                      <div className="vote-btn-grid">
+                        <button
+                          className="btn-vote-yes"
+                          onClick={() => handleCastVote(true)}
+                          disabled={isVoting || !activeIdentity}
+                        >
+                          <span className="text-base font-bold">Vote YES</span>
+                          <span className="text-[11px] opacity-80">Prove ballot choice = true</span>
+                        </button>
+                        <button
+                          className="btn-vote-no"
+                          onClick={() => handleCastVote(false)}
+                          disabled={isVoting || !activeIdentity}
+                        >
+                          <span className="text-base font-bold">Vote NO</span>
+                          <span className="text-[11px] opacity-80">Prove ballot choice = false</span>
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="glass-panel p-6 rounded-2xl text-center border-rose-500/20 bg-rose-950/10 mb-6">
+                      <Lock className="w-8 h-8 text-rose-400 mx-auto mb-2" />
+                      <h4 className="text-sm font-semibold text-white">Voting Period Has Concluded</h4>
+                      <p className="text-xs text-gray-400 mt-1 max-w-md mx-auto">
+                        The designated admin closed this ballot circuit. On-chain state is frozen and final tallies are immutable.
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Admin Closure Control */}
+                  {activeProposal.votingOpen && (
+                    <div className="glass-panel p-4 rounded-xl border border-white/5">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Shield className="w-4 h-4 text-amber-400" />
+                        <h4 className="text-xs font-semibold text-white uppercase tracking-wider">
+                          Admin Authority Action
+                        </h4>
+                      </div>
+                      <form onSubmit={handleCloseVoting} className="flex gap-2">
+                        <input
+                          type="password"
+                          className="form-input text-xs font-mono flex-1"
+                          placeholder="Admin Secret Key (required to close)..."
+                          value={adminSecret}
+                          onChange={(e) => setAdminSecret(e.target.value)}
+                        />
+                        <button
+                          type="submit"
+                          className="btn btn-secondary text-xs px-3 text-rose-400 hover:text-rose-300 border-rose-500/30"
+                          disabled={isClosing || !adminSecret.trim()}
+                        >
+                          {isClosing ? 'Closing...' : 'Close Ballot'}
+                        </button>
+                      </form>
+                    </div>
+                  )}
                 </div>
               )}
 
-              {/* Admin Panel (Closing Proposals) */}
-              {activeProposal.votingOpen && (
-                <div>
-                  <hr style={{ border: 'none', borderBottom: '1px solid var(--border-glass)', margin: '2rem 0' }} />
-                  <h3 className="panel-title">🛡️ Admin Control</h3>
-                  <form onSubmit={handleCloseVoting}>
-                    <div className="form-group">
-                      <label className="form-label">Admin Secret Key (Hex)</label>
-                      <input
-                        type="text"
-                        className="form-input"
-                        placeholder="Must match the admin commitment designated during proposal deployment"
-                        value={adminSecret}
-                        onChange={(e) => setAdminSecret(e.target.value)}
-                        required
-                      />
+              {/* Tab 2: Nullifier Explorer */}
+              {activeTab === 'nullifiers' && (
+                <NullifierExplorer proposal={activeProposal} />
+              )}
+
+              {/* Tab 3: Contract & Technical Spec */}
+              {activeTab === 'spec' && (
+                <div className="space-y-4">
+                  <div className="glass-panel p-4 rounded-xl">
+                    <div className="flex items-center gap-2 mb-2">
+                      <FileCode className="w-4 h-4 text-purple-400" />
+                      <h4 className="text-xs font-semibold text-white uppercase tracking-wider">
+                        Public Ledger State
+                      </h4>
                     </div>
-                    <button
-                      type="submit"
-                      className="btn btn-secondary btn-action"
-                      style={{ width: '100%', borderColor: 'rgba(255, 59, 48, 0.4)', color: '#ff7b75' }}
-                      disabled={isClosing || !adminSecret}
-                    >
-                      {isClosing ? 'Closing voting...' : 'Close Voting Period'}
-                    </button>
-                  </form>
+                    <div className="font-mono text-xs text-gray-300 space-y-1 bg-black/40 p-3 rounded-lg">
+                      <div><span className="text-purple-400">proposalId:</span> {activeProposal.proposalId}</div>
+                      <div><span className="text-cyan-400">contractAddress:</span> {activeProposal.address}</div>
+                      <div><span className="text-amber-400">adminCommitment:</span> {activeProposal.adminCommitment}</div>
+                      <div><span className="text-emerald-400">votingOpen:</span> {String(activeProposal.votingOpen)}</div>
+                      <div><span className="text-white">nullifiersCount:</span> {activeProposal.nullifiers.length}</div>
+                    </div>
+                  </div>
+
+                  <div className="glass-panel p-4 rounded-xl">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Code2 className="w-4 h-4 text-cyan-400" />
+                      <h4 className="text-xs font-semibold text-white uppercase tracking-wider">
+                        Compact Circuit: castVote()
+                      </h4>
+                    </div>
+                    <pre className="font-mono text-[11px] text-gray-300 bg-black/40 p-3 rounded-lg overflow-x-auto leading-relaxed">
+{`export circuit castVote(): [] {
+    assert(votingOpen, "Voting is closed");
+
+    const sk = voterSecretKey();
+    const choice = disclose(voteChoice());
+
+    // Derive deterministic nullifier inside circuit
+    const nullifier = disclose(persistentHash<Vector<2, Bytes<32>>>([sk, proposalId]));
+
+    // Prevent double voting
+    assert(!nullifierSet.member(nullifier), "Double voting is not allowed");
+
+    // Insert into ledger nullifier set and increment tally
+    nullifierSet.insert(nullifier, true);
+    if (choice) {
+        yesTally.increment(1);
+    } else {
+        noTally.increment(1);
+    }
+}`}
+                    </pre>
+                  </div>
                 </div>
               )}
             </div>
           ) : (
-            <div className="glass-panel panel-card empty-state">
-              <div className="empty-state-icon">📊</div>
-              <h3>No Proposal Active</h3>
-              <p>Select a proposal from the sidebar or create a new one to view details and cast votes.</p>
+            <div className="glass-panel p-12 text-center rounded-2xl text-gray-400">
+              <Vote className="w-12 h-12 mx-auto mb-3 text-gray-600" />
+              <h3 className="text-base font-semibold text-white mb-1">No Proposal Selected</h3>
+              <p className="text-xs text-gray-400 mb-4">
+                Choose a proposal from the list on the right or deploy a new Zero-Knowledge ballot circuit.
+              </p>
+              <button className="btn btn-primary text-xs" onClick={() => setIsDeployOpen(true)}>
+                + Deploy New Proposal
+              </button>
             </div>
           )}
         </div>
 
-        {/* Right Side: Sidebar listing and deployment */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-          {/* Create Proposal Card */}
-          <div className="glass-panel panel-card">
-            <h3 className="panel-title">➕ Deploy ZK Proposal Contract</h3>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '1.25rem' }}>
-              Create a new voting circuit on the Midnight ledger. Designated admin key will control when voting is frozen.
-            </p>
-            
-            <form onSubmit={handleDeploy}>
-              <div className="form-group">
-                <label className="form-label">Proposal Topic / Question</label>
-                <textarea
-                  className="form-input"
-                  rows={3}
-                  placeholder="e.g. Do you support launching our ZK voting dApp on mainnet?"
-                  value={newProposalText}
-                  onChange={(e) => setNewProposalText(e.target.value)}
-                  required
-                />
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">Admin Secret Key (Hex)</label>
-                <div style={{ display: 'flex', gap: '0.5rem' }}>
-                  <input
-                    type={showDeploySecret ? "text" : "password"}
-                    className="form-input"
-                    placeholder="Key to authorize closure of this voting period"
-                    value={deployAdminSecret}
-                    onChange={(e) => setDeployAdminSecret(e.target.value)}
-                    required
-                  />
-                  <button
-                    type="button"
-                    className="btn btn-secondary btn-action"
-                    onClick={() => setShowDeploySecret(!showDeploySecret)}
-                    disabled={isDeploying || !deployAdminSecret}
-                  >
-                    {showDeploySecret ? 'Hide' : 'Show'}
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn-secondary btn-action"
-                    onClick={() => generateRandomHexKey(setDeployAdminSecret)}
-                    disabled={isDeploying}
-                  >
-                    Generate
-                  </button>
-                </div>
-              </div>
-
+        {/* Right Side: Sidebar Proposals List */}
+        <div>
+          <div className="glass-panel p-5 rounded-2xl">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-sm font-semibold text-white flex items-center gap-2">
+                <Layers className="w-4 h-4 text-purple-400" />
+                <span>Governance Proposals ({filteredProposals.length})</span>
+              </h3>
               <button
-                type="submit"
-                className="btn btn-primary"
-                style={{ width: '100%', marginTop: '0.5rem' }}
-                disabled={isDeploying || !newProposalText || !deployAdminSecret}
+                className="text-xs text-purple-400 hover:text-purple-300 font-semibold"
+                onClick={() => setIsDeployOpen(true)}
               >
-                {isDeploying ? 'Deploying Circuit...' : 'Deploy Proposal'}
+                + New
               </button>
-            </form>
-          </div>
+            </div>
 
-          {/* Proposals List Card */}
-          <div className="glass-panel panel-card">
-            <h3 className="panel-title">📋 Active ZK Proposals</h3>
-            {proposals.length === 0 ? (
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>No proposals deployed yet.</p>
+            {filteredProposals.length === 0 ? (
+              <div className="p-8 text-center text-gray-500 text-xs">
+                No proposals match your current filters.
+              </div>
             ) : (
-              <div className="proposal-list-container">
-                {proposals.map((prop) => (
-                  <div
-                    key={prop.address}
-                    className={`proposal-card ${activeProposalId === prop.address ? 'active' : ''}`}
-                    onClick={() => setActiveProposalId(prop.address)}
-                  >
-                    <div className="proposal-header">
-                      <div className="proposal-title">{prop.proposalText.slice(0, 50)}...</div>
-                      {prop.votingOpen ? (
-                        <span className="badge badge-open" style={{ fontSize: '0.65rem' }}>Open</span>
-                      ) : (
-                        <span className="badge badge-closed" style={{ fontSize: '0.65rem' }}>Closed</span>
-                      )}
+              <div className="sidebar-proposal-list">
+                {filteredProposals.map((prop) => {
+                  const isActive = activeProposalId === prop.address;
+                  const votesCount = prop.yesTally + prop.noTally;
+                  return (
+                    <div
+                      key={prop.address}
+                      className={`proposal-item-card ${isActive ? 'active' : ''}`}
+                      onClick={() => setActiveProposalId(prop.address)}
+                    >
+                      <div className="flex justify-between items-start gap-2 mb-1.5">
+                        {prop.category && (
+                          <span className="badge badge-category">{prop.category}</span>
+                        )}
+                        {prop.votingOpen ? (
+                          <span className="badge badge-open text-[10px]">Open</span>
+                        ) : (
+                          <span className="badge badge-closed text-[10px]">Closed</span>
+                        )}
+                      </div>
+
+                      <h4 className="proposal-item-title line-clamp-2">
+                        {prop.proposalText}
+                      </h4>
+
+                      <div className="flex justify-between items-center text-[11px] text-gray-400 pt-1 border-t border-white/5 mt-2">
+                        <span className="font-mono">{prop.address.slice(0, 10)}...</span>
+                        <span className="font-semibold text-gray-300">{votesCount} votes</span>
+                      </div>
                     </div>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontFamily: 'monospace' }}>
-                      ID: {prop.address.slice(0, 16)}...
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
         </div>
       </div>
+
+      {/* Modals */}
+      <KeyVaultModal
+        isOpen={isKeyVaultOpen}
+        onClose={() => setIsKeyVaultOpen(false)}
+        selectedIdentityId={activeIdentity ? activeIdentity.id : null}
+        onSelectIdentity={(id) => {
+          setActiveIdentity(id);
+          showToast('info', `Switched to identity: ${id.label}`);
+        }}
+      />
+
+      <ZkVisualizerModal
+        isOpen={zkVisualizer.isOpen}
+        step={zkVisualizer.step}
+        voterSecretMasked={zkVisualizer.voterSecretMasked}
+        choice={zkVisualizer.choice}
+        proposalId={zkVisualizer.proposalId}
+        derivedNullifier={zkVisualizer.derivedNullifier}
+        onDone={() => setZkVisualizer((prev) => ({ ...prev, isOpen: false }))}
+      />
+
+      <ReceiptModal
+        receipt={latestReceipt}
+        onClose={() => setLatestReceipt(null)}
+      />
+
+      <ActivityFeedModal
+        isOpen={isActivityFeedOpen}
+        onClose={() => setIsActivityFeedOpen(false)}
+      />
+
+      <DeployProposalModal
+        isOpen={isDeployOpen}
+        onClose={() => setIsDeployOpen(false)}
+        onDeploy={handleDeployProposal}
+        isDeploying={isDeploying}
+      />
     </div>
   );
 }
+
 export default App;
