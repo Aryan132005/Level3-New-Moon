@@ -145,7 +145,7 @@ Since the Compact compiler distributes Linux-native binaries, compilation must r
     ```bash
     export PATH="$HOME/.local/bin:$PATH"
     ```
-3.  Navigate to the project root directory inside WSL (e.g., `/mnt/c/Users/user/OneDrive/Desktop/Level3 New Moon`) and compile:
+3.  Navigate to the project root directory and compile:
     ```bash
     compact compile contracts/voting.compact contracts/managed/voting
     ```
